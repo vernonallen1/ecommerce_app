@@ -3,8 +3,6 @@ import { ShoppingBag } from "lucide-react";
 import Navbar from "../components/Navbar";
 
 const Cart = () => {
-  const cart = {};
-
   return (
     <div className="flex flex-col min-h-screen w-full bg-slate-950 text-white">
       <Navbar />

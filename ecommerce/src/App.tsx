@@ -5,6 +5,8 @@ import { Routes, Route } from "react-router-dom";
 import StoresCollection from './pages/StoresCollection';
 import Homepage from './pages/Homepage';
 import Marketplace from './pages/Marketplace';
+import TrendingProducts from './pages/TrendingProducts';
+import Product from './pages/Product';
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
       <Route path="/store" element={<StoresCollection />} />
       <Route path="/" element={<Homepage />} />
       <Route path="/marketplace" element={<Marketplace />} />
+      <Route path="/homepage/trending" element={<TrendingProducts />} />
+      <Route path="/product/:product" element={<Product />} />
     </Routes>
   );
 }

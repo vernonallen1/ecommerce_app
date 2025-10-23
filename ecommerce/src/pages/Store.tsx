@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import ProductGrid from "../components/ProductGrid";
+import type { ProductItem } from "../models/ProductItem";
 
 const Store = () => {
   return (
@@ -29,7 +30,9 @@ const StoreBanner = () => {
 
   return (
     <div className="bg-slate-900 border-b border-slate-800 px-8 py-6 md:flex md:items-center md:gap-8">
-      <div className="w-40 h-40 bg-white rounded-xl shadow-md flex-shrink-0"></div>
+      <div className="bg-white rounded-xl shadow-md flex-shrink-0">
+
+      </div>
 
       <div className="flex flex-col mt-6 md:mt-0 md:flex-1 justify-between">
         {/* Store Info */}
@@ -76,11 +79,11 @@ const Stat = ({ label, value, icon }: { label: string; value: string; icon?: Rea
 
 /* -------------------- Filter Sidebar -------------------- */
 const Filter = () => {
-  const [priceExpanded, setPriceExpanded] = useState(false);
-  const [itemExpanded, setItemExpanded] = useState(false);
+  const [priceExpanded, setPriceExpanded] = useState(true);
+  const [itemExpanded, setItemExpanded] = useState(true);
 
   return (
-    <aside className="w-full md:w-1/4 bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-md">
+    <aside className="w-full md:w-1/4 bg-slate-900 h-fit border border-slate-800 rounded-xl p-6 shadow-md">
       <h2 className="text-xl font-bold mb-6 border-b border-slate-700 pb-2">
         Filters
       </h2>
@@ -180,14 +183,19 @@ const CheckboxFilters = () => {
 
 /* -------------------- Products Grid -------------------- */
 const Products = () => {
-  const items = [
-    { name: "Shampoo" },
-    { name: "Soap" },
-    { name: "Tissue" },
-    { name: "Cologne" },
-    { name: "Milk" },
-    { name: "Sugar" },
+  const items: ProductItem[] = [
+    { name: "Shampoo", image: "https://picsum.photos/seed/shampoo/300/200", store: "" },
+    { name: "Soap", image: "https://picsum.photos/seed/soap/300/200", store: ""  },
+    { name: "Tissue", image: "https://picsum.photos/seed/tissue/300/200", store: ""  },
+    { name: "Cologne", image: "https://picsum.photos/seed/cologne/300/200", store: ""  },
+    { name: "Milk", image: "https://picsum.photos/seed/milk/300/200", store: ""  },
+    { name: "Sugar", image: "https://picsum.photos/seed/sugar/300/200", store: ""  },
+    { name: "Toothpaste", image: "https://picsum.photos/seed/toothpaste/300/200", store: ""  },
+    { name: "Detergent", image: "https://picsum.photos/seed/detergent/300/200", store: ""  },
+    { name: "Lotion", image: "https://picsum.photos/seed/lotion/300/200", store: ""  },
+    { name: "Coffee", image: "https://picsum.photos/seed/coffee/300/200", store: ""  },
   ];
+
 
   return (
     <section className="flex-1">
@@ -220,7 +228,9 @@ const Products = () => {
       </div>
 
       {/* Product Grid */}
-      <ProductGrid items={items} gridCols={4}/>
+      <ProductGrid 
+        items={items} 
+      />
     </section>
   );
 };

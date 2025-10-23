@@ -2,18 +2,76 @@ import {useState} from 'react'
 import Navbar from '../components/Navbar'
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductGrid from '../components/ProductGrid';
+import { useNavigate } from 'react-router-dom';
+import type { ProductItem } from '../models/ProductItem';
 
 const Homepage = () => {
+    const [selectedTab, setSelectedTab] = useState('Trending');
+    const navigate = useNavigate();
+    const topStores = [
+      { storeName: "TechHaven" },
+      { storeName: "UrbanThreads" },
+      { storeName: "GreenLeaf Organics" },
+      { storeName: "GadgetGalaxy" },
+      { storeName: "HomeEssence" },
+      { storeName: "PetPalace" },
+      { storeName: "BookNook" },
+      { storeName: "FitZone" },
+      { storeName: "StyleSphere" },
+      { storeName: "BeautyBloom" }
+    ];
     return (
         <div className="min-h-screen bg-slate-950 text-white">
             <Navbar />
-            <div className='flex flex-col p-5'>
-                <span className='text-left text-xl font-bold mx-5'>Featured</span>
-                <ProductsCarousel />
-
-                <span className='text-left text-xl font-bold mx-5'>Trending</span>
-                <TrendingProducts />
+            <div className='flex flex-col items-start '>
+              <span className='text-2xl px-10 pt-3 font-bold text-amber-400'>Featured</span>
+              <ProductsCarousel />
             </div>
+
+            <div className='flex'>
+              <div className='flex w-3/4 flex-col ml-5'>
+                <div className="flex  flex-col ml-5">
+                  <div className="flex justify-start space-x-8 border-b border-gray-700 pb-2 mr-5">
+                    {[
+                      { label: "Trending", path: "/homepage/trending" },
+                      { label: "Popular", path: "/homepage/popular" },
+                      { label: "New Arrivals", path: "/homepage/new-arrivals" },
+                    ].map((item, index) => (
+                      <span
+                        key={index}
+                        onClick={() => {
+                          setSelectedTab(item.label);
+                        }}
+                        className={`cursor-pointer text-lg font-semibold transition-all duration-200 
+                         hover:text-blue-400 hover:scale-105 relative group ${selectedTab === item.label ? "text-blue-400" : "text-gray-300"}`}
+                      >
+                        {item.label}
+                        <span className={`absolute bottom-[-6px] left-0 w-0 h-[2px] bg-blue-500 rounded-full transition-all duration-300 group-hover:w-full ${selectedTab === item.label ? "w-full" : ""}`}>
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <TrendingProducts />
+
+              </div>
+              <div className='flex flex-col w-1/4 mr-10'>
+                <span className='font-bold text-xl text-left text-blue-300'>Top Stores</span>
+                <div className='flex flex-col my-4 gap-y-2'>
+                  {topStores.map((item) => {
+                    return (
+                      <div
+                        className="cursor-pointer bg-slate-700 rounded-lg shadow-md hover:bg-gray-800 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-gray-200 font-semibold text-left px-4 py-3 flex items-center justify-between"
+                      >
+                        <span className="truncate">{item.storeName}</span>
+                        <span className="text-sm text-gray-400 hover:text-gray-300">→</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+            
         </div>
     )
 }
@@ -42,14 +100,14 @@ const ProductsCarousel = () => {
 
   return (
     <div
-      className="relative flex items-center w-full my-5 overflow-hidden"
+      className="relative flex items-center w-full my-5 px-5 overflow-hidden"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Left Button */}
       {hovered && (
         <button
-          className="absolute left-3 z-10 bg-white text-gray-700 shadow-md hover:bg-blue-600 hover:text-white rounded-full p-2 transition-all duration-300"
+          className="absolute left-3 z-10 bg-slate-800 text-gray-200 shadow-md hover:bg-blue-600 hover:text-white rounded-full p-2 transition-all duration-300"
           onClick={handlePrev}
         >
           <ChevronLeft size={24} />
@@ -57,7 +115,7 @@ const ProductsCarousel = () => {
       )}
 
       {/* Carousel Container */}
-      <div className="w-full overflow-hidden mx-5">
+      <div className="w-full overflow-hidden mx-5 rounded-lg">
         <div
           className="flex gap-5 transition-transform duration-500"
           style={{
@@ -67,18 +125,18 @@ const ProductsCarousel = () => {
           {featured_products.map((item) => (
             <div
               key={item.name}
-              className="flex-none w-1/4 bg-white border border-gray-200 rounded-xl shadow hover:shadow-xl transition-all duration-300 cursor-pointer group"
+              className="flex-none w-1/4 bg-slate-700 rounded-xl shadow hover:shadow-xl transition-all overflow-hidden duration-300 cursor-pointer group"
             >
               <img
                 src={item.img}
                 alt={item.name}
-                className="h-60 w-full object-cover rounded-t-xl transition-transform duration-300"
+                className="h-60 w-full object-cover rounded-t-xl transition-transform duration-300 ease-in-out hover:scale-110 "
               />
               <div className="flex flex-col p-2 text-center">
-                <span className="font-medium text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
+                <span className="font-medium text-gray-200 group-hover:text-blue-600 transition-colors duration-300">
                   {item.name}
                 </span>
-                <span className='text-gray-800 text-xs'>
+                <span className='text-gray-200 text-xs'>
                     {item.store}
                 </span>
               </div>
@@ -101,34 +159,36 @@ const ProductsCarousel = () => {
 };
 
 const TrendingProducts = () => {
-  const trendingProducts = [
-    { name: "Sunglasses", img: "https://picsum.photos/200?random=1", store: "Executive Optical" },
-    { name: "Tumbler", img: "https://picsum.photos/200?random=2", store: "HydroFlask" },
-    { name: "Jacket", img: "https://picsum.photos/200?random=3", store: "The North Face" },
-    { name: "Mattress", img: "https://picsum.photos/200?random=4", store: "Uratex" },
-    { name: "Coffee Maker", img: "https://picsum.photos/200?random=5", store: "De'Longhi" },
-    { name: "Cologne", img: "https://picsum.photos/200?random=6", store: "Bench" },
-    { name: "Whiskey", img: "https://picsum.photos/200?random=7", store: "Jack Daniel’s" },
-    { name: "Smartwatch", img: "https://picsum.photos/200?random=8", store: "Samsung" },
-    { name: "Bluetooth Speaker", img: "https://picsum.photos/200?random=9", store: "JBL" },
-    { name: "Running Shoes", img: "https://picsum.photos/200?random=10", store: "Nike" },
-    { name: "Laptop Bag", img: "https://picsum.photos/200?random=11", store: "Samsonite" },
-    { name: "Power Bank", img: "https://picsum.photos/200?random=12", store: "Anker" },
-    { name: "Wireless Mouse", img: "https://picsum.photos/200?random=13", store: "Logitech" },
-    { name: "Gaming Keyboard", img: "https://picsum.photos/200?random=14", store: "Razer" },
-    { name: "Perfume", img: "https://picsum.photos/200?random=15", store: "Dior" },
-    { name: "Tablet", img: "https://picsum.photos/200?random=16", store: "Apple" },
-    { name: "Headphones", img: "https://picsum.photos/200?random=17", store: "Sony" },
-    { name: "Wristwatch", img: "https://picsum.photos/200?random=18", store: "Casio" },
-    { name: "Backpack", img: "https://picsum.photos/200?random=19", store: "Herschel" },
-    { name: "Camera", img: "https://picsum.photos/200?random=20", store: "Canon" },
+  const trendingProducts: ProductItem[] = [
+    { name: "Sunglasses", image: "https://picsum.photos/200?random=1", store: "Executive Optical" },
+    { name: "Tumbler", image: "https://picsum.photos/200?random=2", store: "HydroFlask" },
+    { name: "Jacket", image: "https://picsum.photos/200?random=3", store: "The North Face" },
+    { name: "Mattress", image: "https://picsum.photos/200?random=4", store: "Uratex" },
+    { name: "Coffee Maker", image: "https://picsum.photos/200?random=5", store: "De'Longhi" },
+    { name: "Cologne", image: "https://picsum.photos/200?random=6", store: "Bench" },
+    { name: "Whiskey", image: "https://picsum.photos/200?random=7", store: "Jack Daniel’s" },
+    { name: "Smartwatch", image: "https://picsum.photos/200?random=8", store: "Samsung" },
+    { name: "Bluetooth Speaker", image: "https://picsum.photos/200?random=9", store: "JBL" },
+    { name: "Running Shoes", image: "https://picsum.photos/200?random=10", store: "Nike" },
+    { name: "Laptop Bag", image: "https://picsum.photos/200?random=11", store: "Samsonite" },
+    { name: "Power Bank", image: "https://picsum.photos/200?random=12", store: "Anker" },
+    { name: "Wireless Mouse", image: "https://picsum.photos/200?random=13", store: "Logitech" },
+    { name: "Gaming Keyboard", image: "https://picsum.photos/200?random=14", store: "Razer" },
+    { name: "Perfume", image: "https://picsum.photos/200?random=15", store: "Dior" },
+    { name: "Tablet", image: "https://picsum.photos/200?random=16", store: "Apple" },
+    { name: "Headphones", image: "https://picsum.photos/200?random=17", store: "Sony" },
+    { name: "Wristwatch", image: "https://picsum.photos/200?random=18", store: "Casio" },
+    { name: "Backpack", image: "https://picsum.photos/200?random=19", store: "Herschel" },
+    { name: "Camera", image: "https://picsum.photos/200?random=20", store: "Canon" },
   ];
 
 
   return (
     <div className='mx-5 my-4'>
       {/* Display first 10 products only */}
-      <ProductGrid items={trendingProducts.slice(0, trendingProducts.length <= 10 ? trendingProducts.length : 10)} gridCols={5}/>
+      <ProductGrid 
+        items={trendingProducts.slice(0, trendingProducts.length <= 10 ? trendingProducts.length : 10)} 
+      />
     </div>
     
   )
