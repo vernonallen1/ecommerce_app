@@ -1,28 +1,23 @@
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import Navbar from '../components/Navbar'
 import {Plus, Minus, Star, Eye} from 'lucide-react'
 import type { ProductReview } from '../models/ProductReview'
 import type { SimilarProduct } from '../models/SimilarProduct'
+import { getUserId } from "../utils/functions.ts"
+import { useParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import type { ProductVariant, ProductWithVariants } from '../models/Product'
+import _ from 'lodash';
+import Toast from "../components/Toast";
 
-const Product = () => {
-    const [imageIndex, setImageIndex] = useState<number>(0);
-    const [selectedTraits, setSelectedTraits] = useState<Partial<Record<keyof typeof product.traits, string>>>({});
-    const [quantity, setQuantity] = useState<number>(0);
-    const product = { 
-        name: "Sunglasses", 
-        img: [
-            "https://picsum.photos/200?random=1",
-            "https://picsum.photos/200?random=2",
-            "https://picsum.photos/200?random=3",
-            "https://picsum.photos/200?random=4",
-        ], 
-        store: "Executive Optical",
-        price: "Php 200.00",
-        traits: {colors: ["White", "Black", "Blue", "Red"], sizes: ["100", "200", "300"]}, 
-        originalPrice: "Php 250.00",
-        discount: "25%"
-    };
-    const productReviews: ProductReview[] = [
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+const productImages = [
+    `https://picsum.photos/400?random=1`,
+    `https://picsum.photos/400?random=1`,
+    `https://picsum.photos/400?random=1`,
+    `https://picsum.photos/400?random=1`,
+];
+const productReviews: ProductReview[] = [
         {
             name: "John D.",
             review: "Great quality! The frame feels sturdy and the lenses are very clear. Worth the price.",
@@ -93,8 +88,8 @@ const Product = () => {
             time: "1 month ago",
             stars: 5,
         },
-    ];
-    const similarProducts: SimilarProduct[] = [
+];
+const similarProducts: SimilarProduct[] = [
     {
         name: "Aviator Sunglasses",
         store: "RayWear",
@@ -155,9 +150,115 @@ const Product = () => {
         img: "https://picsum.photos/200?random=210",
         price: "₱370.00",
     },
-    ];
+];
 
-    const traits = Object.keys(product.traits) as Array<keyof typeof product.traits>;
+const Product = () => {
+    const { id } = useParams();
+    const [imageIndex, setImageIndex] = useState<number>(0);
+    const [quantity, setQuantity] = useState<number>(0);
+    const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+    const [selectedTraits, setSelectedTraits] = useState<Record<string, string> | null>(null); 
+    const [traitPrice, setTraitPrice] = useState<number | null>(null);
+    const [variantTraits, setVariantTraits] = useState<Record<string, string[]>>({});
+    const [toast, setToast] = useState<{message: string; type: "success" | "error" | "info"} | null>(null);
+
+    const showToast = (message: string, type: "success" | "error" | "info") => {
+        setToast({message, type});
+    };
+
+    const getProduct = async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/products/${id}`, {
+                method: 'GET'
+            });
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error(`Error fetching data: ${error}`)
+        }
+    }
+
+    const {data: productData, isLoading, error} = useQuery<ProductWithVariants, Error>({
+        queryKey: ['product'],
+        queryFn: getProduct 
+    });
+
+    useEffect(() => {
+        if (productData) {
+            setVariantTraits (productData?.variants.reduce((acc, variant) => {
+                for (const [key, value] of Object.entries(variant.variant)) {
+                    if (key in acc && !acc[key].includes(value)) {
+                        acc[key].push(value);
+                    } else if (!(key in acc)){
+                        acc[key] = [value];
+                    }
+                }
+                return acc;
+            }, {} as Record<string, string[]>));
+            if (productData.variants.length !== 0) {
+                setSelectedTraits(productData.variants[0].variant as Record<string, string>)
+            }
+        }
+    }, [productData]);
+
+    useEffect(() => {
+        if (productData) {
+            if (selectedTraits) {
+                const selected = productData.variants.find(item => _.isEqual(item.variant, selectedTraits));
+                if (selected) setSelectedVariant(selected);
+            } else {
+                setSelectedVariant(productData?.variants[0]);
+            }
+        }
+    }, [productData, selectedTraits]);
+
+    if (isLoading) {
+        return <div>Loading</div>
+    }
+
+    const addToCart = async (is_wishlisted: boolean) => {
+        if (quantity === 0 || !selectedVariant) return;
+        try {
+            const response = await fetch(`${BASE_URL}/cart`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: getUserId(),
+                    product_id: productData?.product.product_id,
+                    product_variant: selectedVariant?.id,
+                    is_wishlisted: is_wishlisted,
+                    quantity: quantity
+                })
+            });
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showToast("Item added to cart successfully!", "success");
+            } else {
+                showToast("Failed to add to cart.", "error");
+            }
+
+            return data;
+        } catch (error) {
+            console.log(`Error fetching data: ${error}`);
+        }
+    }
+
+    const handleTraitSelection = (trait: string, item: string) => {
+        const updatedTraits = { ...selectedTraits, [trait]: item }; // compute first
+        setSelectedTraits(updatedTraits); // update state
+    
+        const variantSelected = productData?.variants.find(v => _.isEqual(v.variant, updatedTraits));
+        if (variantSelected) {
+            setTraitPrice(variantSelected.price);
+        } else {
+            console.log(updatedTraits);
+            console.log("No match");
+        }
+    };
+
     return (
         <div className="bg-slate-950 text-white">
             <Navbar />
@@ -165,10 +266,11 @@ const Product = () => {
                 {/* Product Details */}
                 <div className='flex gap-x-5'>
                     <div className='flex flex-col w-1/2 ml-5 my-10'>
-                        <img className="w-full h-2/3 rounded-lg border-4 border-slate-700" src={product.img[imageIndex]} alt="" />
+                        <img className="w-full h-2/3 rounded-lg border-4 border-slate-700" src={productImages[imageIndex]} alt="" />
                         <div className='flex h-[80px] border my-3 rounded-lg gap-x-1 p-1 w-fit self-center'>
-                            {product.img.map((image, index) => {
+                            {productImages.map((image, index) => {
                                 return <img 
+                                    key={index}
                                     src={image} 
                                     alt="" 
                                     className={`h-[70px] rounded-md ${index === imageIndex ? "border-2 border-blue-500": ""}`}
@@ -178,18 +280,18 @@ const Product = () => {
                         </div>
                     </div>
                     <div className='flex flex-col w-1/2 mr-5 my-10 h-[400px]'>
-                        <span className='flex h-fit items-center gap-x-3'>
+                        <span className='flex flex-col h-fit items-start gap-x-3'>
                             <span className='text-blue-400 font-bold text-3xl'>
-                                {product.name}
+                                {productData?.product.product}
                             </span>
-                            <span className='flex items'>
-                                {[1,2,3,4,5].map((item) => <Star size={20} color='white'/>)}
+                            <span className='flex items my-1'>
+                                {[1,2,3,4,5].map((item, index) => <Star key={index} size={20} color='white'/>)}
                             </span>
                         </span>
                         {/* Store Name */}
                         <div className='flex text-sm mt-2 cursor-pointer'>
-                            <span className='text-start text-black bg-gray-200 px-2 px-1 rounded-l-md'>
-                                {product.store}
+                            <span className='text-start text-black bg-gray-200 px-2 rounded-l-md'>
+                                {productData?.product.store}
                             </span>
                             <button className='px-2 bg-gray-800 rounded-r-md'>
                                 <Eye size={15}/>
@@ -197,24 +299,22 @@ const Product = () => {
                         </div>
                         <div className='flex items-center gap-x-5'>
                             <span className='text-start text-4xl py-4 font-bold text-white'>
-                                {product.price}
+                                {`Php ${((traitPrice ? traitPrice : productData?.product.price) || 0) * Math.round(((100 - (productData?.product.discount || 0)) / 100) * 100) / 100}`}
                             </span>
-                            {product.discount && <span className='text-xl line-through text-red-300'>
-                                {product.originalPrice}
+                            {productData?.product.discount && <span className='text-xl line-through text-red-300'>
+                                {traitPrice ? traitPrice : productData?.product.price}
                             </span>}
                         </div>
                         <div className='border-t pt-4 text-justify'>
-                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum ex quod voluptatem quibusdam rem eius. Assumenda porro eius totam voluptates, quidem maxime unde similique laudantium rerum cum rem laborum eaque?
-                            Suscipit rerum perferendis dolores nemo aspernatur iure molestiae temporibus, dolor exercitationem illo saepe in vel, cum laborum et qui obcaecati maiores possimus? Nesciunt, necessitatibus ut quae similique veritatis excepturi iste.
+                            {productData?.product.description}
                         </div>
                         <div className="flex flex-col mt-6">
                             {/* Section Header */}
-                            <h2 className="text-lg font-bold text-gray-200 mb-4 border-b pb-2">
+                            <h2 className="text-lg font-bold text-gray-200 mb-4 border-b pb-2 text-start">
                                 Traits
                             </h2>
-                            {traits.map((trait) => (
-                                <div
-                                key={trait}
+                            {variantTraits && Object.keys(variantTraits).map((trait) => (
+                                <div key={trait}
                                 className="flex flex-col sm:flex-row sm:items-center text-start mb-5"
                                 >
                                     <p className="font-semibold capitalize text-gray-200 w-28 mb-2 sm:mb-0">
@@ -222,13 +322,13 @@ const Product = () => {
                                     </p>
 
                                     <div className="flex flex-wrap gap-2">
-                                        {product.traits[trait].map((item, index) => (
+                                        {variantTraits[trait].map((item: string, index: number) => (
                                         <div
                                             key={index}
-                                            onClick={() => setSelectedTraits((prev) => ({...prev, [trait]: item}))}
-                                            className={`px-3 py-1 border border-gray-300 rounded-full text-sm text-gray-200 
+                                            onClick={() => handleTraitSelection(trait, item)}
+                                            className={`px-3 py-1 border rounded-full text-sm  
                                             cursor-pointer hover:bg-slate-800 hover:border-blue-400 transition-all duration-200 
-                                            ${selectedTraits[trait] === item ? "bg-gray-200 text-blue-700 font-bold transition hover:bg-gray-300 hover:border-blue-500" : ""}`}
+                                            ${selectedTraits && selectedTraits[trait] === item ? "text-blue-300 border-blue-300 font-bold transition hover:bg-gray-300 hover:border-blue-500" : "border-gray-300 text-gray-200"}`}
                                         >
                                             {item}
                                         </div>
@@ -241,7 +341,7 @@ const Product = () => {
                                 <QuantitySelector quantity={quantity} setQuantity={setQuantity}/>
                                 <div className='flex w-full gap-x-5'>
                                     <button className='px-2 py-1 border rounded-md w-1/2 text-blue-700 font-bold 
-                                        shadow-md bg-slate-200 hover:bg-slate-300'>
+                                        shadow-md bg-slate-200 hover:bg-slate-300' onClick={() => addToCart(false)}>
                                         Add to Cart
                                     </button>
                                     <button className='px-2 py-1 border rounded-md w-1/2 text-blue-700 font-bold 
@@ -263,6 +363,13 @@ const Product = () => {
                     <SimilarProducts similarProducts={similarProducts}/>
                 </div>
             </div>
+             {toast && (
+                <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(null)}
+                />
+            )}
         </div>
   )
 }

@@ -1,6 +1,6 @@
 import './App.css'
 import Store from './pages/Store'
-import Cart from './pages/Cart'
+import Cart from './pages/Cart';
 import { Routes, Route } from "react-router-dom";
 import StoresCollection from './pages/StoresCollection';
 import Homepage from './pages/Homepage';
@@ -17,7 +17,7 @@ function App() {
       <Route path="/" element={<Homepage />} />
       <Route path="/marketplace" element={<Marketplace />} />
       <Route path="/homepage/trending" element={<TrendingProducts />} />
-      <Route path="/product/:product" element={<Product />} />
+      <Route path="/product/:id" element={<Product />} />
     </Routes>
   );
 }

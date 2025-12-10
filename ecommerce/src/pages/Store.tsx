@@ -9,7 +9,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import ProductGrid from "../components/ProductGrid";
-import type { ProductItem } from "../models/ProductItem";
+import type { ProductItem } from "../models/Product";
+import { useQuery } from "@tanstack/react-query";
+
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const Store = () => {
   return (
@@ -24,15 +27,12 @@ const Store = () => {
   );
 };
 
-/* -------------------- Store Banner -------------------- */
 const StoreBanner = () => {
   const [bookmarked, setBookMarked] = useState(false);
 
   return (
     <div className="bg-slate-900 border-b border-slate-800 px-8 py-6 md:flex md:items-center md:gap-8">
-      <div className="bg-white rounded-xl shadow-md flex-shrink-0">
-
-      </div>
+      <div className="h-[200px] w-[200px] bg-white rounded-xl shadow-md flex-shrink-0"></div>
 
       <div className="flex flex-col mt-6 md:mt-0 md:flex-1 justify-between">
         {/* Store Info */}
@@ -49,7 +49,7 @@ const StoreBanner = () => {
               onClick={() => setBookMarked(!bookmarked)}
             />
           </div>
-          <p className="text-sm text-gray-300 max-w-3xl leading-relaxed">
+          <p className="text-sm text-gray-300 max-w-3xl leading-relaxed text-justify">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias
             asperiores eum sint repellat ex, fugiat eveniet quibusdam soluta
             placeat incidunt molestiae.
@@ -59,7 +59,11 @@ const StoreBanner = () => {
         {/* Stats */}
         <div className="flex justify-between items-center bg-slate-800 rounded-xl p-4 mt-6 text-center">
           <Stat label="Products" value="200" />
-          <Stat label="Ratings" value="4.8" icon={<Star size={14} className="inline text-yellow-400 ml-1" />} />
+          <Stat
+            label="Ratings"
+            value="4.8"
+            icon={<Star size={14} className="inline text-yellow-400 ml-1" />}
+          />
           <Stat label="24-hour Sales" value="120" />
           <Stat label="Total Sales" value="5,200" />
         </div>
@@ -68,7 +72,15 @@ const StoreBanner = () => {
   );
 };
 
-const Stat = ({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) => (
+const Stat = ({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+}) => (
   <div className="flex flex-col">
     <p className="text-sm text-gray-400">{label}</p>
     <p className="text-lg font-semibold text-white">
@@ -183,19 +195,23 @@ const CheckboxFilters = () => {
 
 /* -------------------- Products Grid -------------------- */
 const Products = () => {
-  const items: ProductItem[] = [
-    { name: "Shampoo", image: "https://picsum.photos/seed/shampoo/300/200", store: "" },
-    { name: "Soap", image: "https://picsum.photos/seed/soap/300/200", store: ""  },
-    { name: "Tissue", image: "https://picsum.photos/seed/tissue/300/200", store: ""  },
-    { name: "Cologne", image: "https://picsum.photos/seed/cologne/300/200", store: ""  },
-    { name: "Milk", image: "https://picsum.photos/seed/milk/300/200", store: ""  },
-    { name: "Sugar", image: "https://picsum.photos/seed/sugar/300/200", store: ""  },
-    { name: "Toothpaste", image: "https://picsum.photos/seed/toothpaste/300/200", store: ""  },
-    { name: "Detergent", image: "https://picsum.photos/seed/detergent/300/200", store: ""  },
-    { name: "Lotion", image: "https://picsum.photos/seed/lotion/300/200", store: ""  },
-    { name: "Coffee", image: "https://picsum.photos/seed/coffee/300/200", store: ""  },
-  ];
+  const fetchTrendingProducts = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/products`, {
+        method: 'GET'
+      });
+      const data =  await response.json();
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.error(`Error fetching products: ${error}`);
+    }
+  }
 
+  const {data: trendingProducts, isLoading, error} = useQuery({
+    queryKey: ['trendingProducts'],
+    queryFn: fetchTrendingProducts,
+  });
 
   return (
     <section className="flex-1">
@@ -228,9 +244,7 @@ const Products = () => {
       </div>
 
       {/* Product Grid */}
-      <ProductGrid 
-        items={items} 
-      />
+      <ProductGrid items={trendingProducts} />
     </section>
   );
 };
