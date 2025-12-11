@@ -11,7 +11,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const Cart = () => {
   const userId = localStorage.getItem('userId');
   const [categorizedData, setCategorizedData] = useState<Array<Record<any, any>>>([]);
-  const [openDeliveryAddress, setOpenDeliveryAddress] = useState(true);
+  const [openDeliveryAddress, setOpenDeliveryAddress] = useState<boolean>(false);
   if (!userId) return
 
   const getCart = async (userId: number) => {
@@ -79,7 +79,7 @@ const Cart = () => {
   return (
     <div className="flex flex-col min-h-screen w-full bg-slate-950 text-white">
       <Navbar />
-      <AddressSelector />
+      {openDeliveryAddress && <AddressSelector setOpenDeliveryAddress={setOpenDeliveryAddress}/>}
 
       {/* Header */}
       <div className="flex justify-center py-6">
@@ -92,7 +92,7 @@ const Cart = () => {
       {/* Delivery Section */}
       <div className="flex justify-between items-center w-11/12 md:w-1/2 mx-auto mt-6 px-4 py-3 bg-slate-800 rounded-xl shadow-md">
         <p className="font-semibold text-lg">Delivery to:</p>
-        <button className="rounded-md bg-blue-500 hover:bg-blue-600 transition text-white font-semibold py-2 px-4 text-sm">
+        <button onClick={() => setOpenDeliveryAddress(true)} className="rounded-md bg-blue-500 hover:bg-blue-600 transition text-white font-semibold py-2 px-4 text-sm">
           Set Address
         </button>
       </div>
