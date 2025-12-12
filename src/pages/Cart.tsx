@@ -5,13 +5,23 @@ import { useQuery } from "@tanstack/react-query";
 import type { CartModel } from "../models/Cart";
 import { getUserId } from "../utils/functions";
 import AddressSelector from "../components/AddressSelector.tsx"
+import AddressList from "../components/AddressList.tsx"
+import type { AddressData } from "../models/Address.tsx";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const Cart = () => {
   const userId = localStorage.getItem('userId');
   const [categorizedData, setCategorizedData] = useState<Array<Record<any, any>>>([]);
-  const [openDeliveryAddress, setOpenDeliveryAddress] = useState<boolean>(false);
+  const [openDeliveryAddressList, setOpenDeliveryAddressList] = useState<boolean>(false);
+  const [openAddressForm, setOpenAddressForm] = useState<boolean>(false);
+  const [editAddressData, setEditAddressData] = useState<AddressData | null>(null);
+  const [toast, setToast] = useState<{message: string; type: "success" | "error" | "info"} | null>(null);
+
+  const showToast = (message: string, type: "success" | "error" | "info") => {
+      setToast({message, type});
+  };
+
   if (!userId) return
 
   const getCart = async (userId: number) => {
@@ -26,7 +36,7 @@ const Cart = () => {
     }
   }
 
-  const {data, isLoading, error} = useQuery<CartModel[], Error>({
+  const {data, isLoading} = useQuery<CartModel[], Error>({
     queryKey: ['cart'],
     queryFn: () => getCart(parseInt(userId!, 10)),
     enabled: !!userId
@@ -79,7 +89,8 @@ const Cart = () => {
   return (
     <div className="flex flex-col min-h-screen w-full bg-slate-950 text-white">
       <Navbar />
-      {openDeliveryAddress && <AddressSelector setOpenDeliveryAddress={setOpenDeliveryAddress}/>}
+      {openDeliveryAddressList && <AddressList setOpen={setOpenDeliveryAddressList} setOpenForm={setOpenAddressForm} setEditAddressData={setEditAddressData} toast={toast} setToast={setToast}/>}
+      {openAddressForm && <AddressSelector setOpen={setOpenDeliveryAddressList} setOpenForm={setOpenAddressForm} showToast={showToast} addressEditData={editAddressData}/>}
 
       {/* Header */}
       <div className="flex justify-center py-6">
@@ -92,7 +103,7 @@ const Cart = () => {
       {/* Delivery Section */}
       <div className="flex justify-between items-center w-11/12 md:w-1/2 mx-auto mt-6 px-4 py-3 bg-slate-800 rounded-xl shadow-md">
         <p className="font-semibold text-lg">Delivery to:</p>
-        <button onClick={() => setOpenDeliveryAddress(true)} className="rounded-md bg-blue-500 hover:bg-blue-600 transition text-white font-semibold py-2 px-4 text-sm">
+        <button onClick={() => setOpenDeliveryAddressList(true)} className="rounded-md bg-blue-500 hover:bg-blue-600 transition text-white font-semibold py-2 px-4 text-sm">
           Set Address
         </button>
       </div>

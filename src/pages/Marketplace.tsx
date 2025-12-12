@@ -1,9 +1,6 @@
-import React from "react";
 import Navbar from "../components/Navbar";
 import CategoryBar from "../components/CategoryBar";
 import ProductGrid from "../components/ProductGrid";
-import type { ProductItem } from "../models/Product";
-import type { Store } from "../models/Store";
 import Footer from "../components/Footer";
 import { useQuery } from "@tanstack/react-query";
 
@@ -23,7 +20,7 @@ const Marketplace = () => {
     }
   }
 
-  const {data: trendingProducts = [], isLoading, error} = useQuery({
+  const {data: trendingProducts = []} = useQuery({
     queryKey: ['trendingProducts'],
     queryFn: fetchTrendingProducts,
   });
